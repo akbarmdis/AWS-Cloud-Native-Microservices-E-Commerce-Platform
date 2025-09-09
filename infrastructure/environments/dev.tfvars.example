@@ -1,0 +1,83 @@
+# AWS Microservices E-Commerce Platform - Development Environment Configuration
+# Copy this file to dev.tfvars and update the values below
+
+# General Configuration
+aws_region   = "us-west-2"
+project_name = "ecommerce-microservices"
+environment  = "dev"
+owner        = "your-name-or-team"
+cost_center  = "engineering"
+
+# Terraform State Configuration (Optional - for remote backend)
+# Uncomment and configure these if you want to use S3 backend for state management
+# terraform_state_bucket = "your-unique-terraform-state-bucket"
+# terraform_state_key    = "dev/terraform.tfstate"
+# terraform_lock_table   = "your-terraform-lock-table"
+
+# VPC Configuration
+vpc_cidr                 = "10.0.0.0/16"
+private_subnet_cidrs     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+public_subnet_cidrs      = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+database_subnet_cidrs    = ["10.0.201.0/24", "10.0.202.0/24", "10.0.203.0/24"]
+enable_nat_gateway       = true
+
+# EKS Configuration
+cluster_version                 = "1.28"
+cluster_endpoint_public_access  = true
+
+node_groups = {
+  general = {
+    instance_types = ["t3.medium"]
+    capacity_type  = "ON_DEMAND"
+    ami_type      = "AL2_x86_64"
+    disk_size     = 50
+    scaling_config = {
+      desired_size = 2
+      max_size     = 5
+      min_size     = 1
+    }
+    update_config = {
+      max_unavailable_percentage = 25
+    }
+    labels = {
+      role = "general"
+    }
+    taints = []
+  }
+  spot = {
+    instance_types = ["t3.medium", "t3.large"]
+    capacity_type  = "SPOT"
+    ami_type      = "AL2_x86_64"
+    disk_size     = 50
+    scaling_config = {
+      desired_size = 1
+      max_size     = 10
+      min_size     = 0
+    }
+    update_config = {
+      max_unavailable_percentage = 50
+    }
+    labels = {
+      role = "spot"
+    }
+    taints = [{
+      key    = "spot"
+      value  = "true"
+      effect = "NO_SCHEDULE"
+    }]
+  }
+}
+
+# RDS Configuration
+rds_instance_class       = "db.t3.micro"
+rds_allocated_storage    = 20
+rds_max_allocated_storage = 100
+database_name            = "ecommerce_dev"
+database_username        = "dbadmin"
+backup_retention_period  = 3
+backup_window           = "07:00-09:00"
+maintenance_window      = "sun:09:00-sun:11:00"
+
+# ElastiCache Configuration
+redis_node_type       = "cache.t3.micro"
+redis_num_cache_nodes = 1
